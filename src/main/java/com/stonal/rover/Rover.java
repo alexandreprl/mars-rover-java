@@ -1,8 +1,12 @@
 package com.stonal.rover;
 
 import com.stonal.rover.command.CommandFactory;
+import com.stonal.rover.command.exception.CannotExecuteCommandException;
 import com.stonal.rover.command.exception.UnknownCommandException;
+import com.stonal.rover.exception.CannotCheckForObstacleException;
 import com.stonal.rover.exception.FailedToInitializeRoverException;
+import com.stonal.rover.exception.ObstacleEncounteredException;
+import com.stonal.rover.planet.exception.InvalidPositionOnPlanetException;
 import com.stonal.rover.planet.Planet;
 
 import java.awt.*;
@@ -26,7 +30,7 @@ public class Rover {
         this.planet = planet;
     }
 
-    public void receiveCommands(String commands) throws UnknownCommandException {
+    public void receiveCommands(String commands) throws CannotExecuteCommandException, UnknownCommandException {
         for (char c : commands.toCharArray()) {
             commandFactory.charToCommand(c).execute(this);
         }
@@ -56,5 +60,22 @@ public class Rover {
             case SOUTH -> CardinalDirection.WEST;
             case WEST -> CardinalDirection.NORTH;
         };
+    }
+
+    public void checkForObstacleForward() throws ObstacleEncounteredException, CannotCheckForObstacleException {
+        checkForObstacleInDirection(facedDirection);
+    }
+
+    public void checkForObstacleBackward() throws ObstacleEncounteredException, CannotCheckForObstacleException {
+        checkForObstacleInDirection(facedDirection.opposite());
+    }
+    private void checkForObstacleInDirection(CardinalDirection direction) throws ObstacleEncounteredException, CannotCheckForObstacleException {
+        Point nextPosition = planet.nextPositionInDirection(position, direction);
+        try {
+            if (planet.hasObstacleInPosition(nextPosition))
+                throw new ObstacleEncounteredException(nextPosition);
+        } catch (InvalidPositionOnPlanetException e) {
+            throw new CannotCheckForObstacleException(e);
+        }
     }
 }
