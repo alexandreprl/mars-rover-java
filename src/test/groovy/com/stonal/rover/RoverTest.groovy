@@ -2,9 +2,13 @@ package com.stonal.rover
 
 import com.stonal.rover.command.Command
 import com.stonal.rover.command.CommandFactory
+import com.stonal.rover.command.exception.CannotExecuteCommandException
 import com.stonal.rover.command.exception.UnknownCommandException
+import com.stonal.rover.exception.CannotCheckForObstacleException
 import com.stonal.rover.exception.FailedToInitializeRoverException
+import com.stonal.rover.exception.ObstacleEncounteredException
 import com.stonal.rover.planet.Planet
+import com.stonal.rover.planet.exception.InvalidPositionOnPlanetException
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -75,7 +79,7 @@ class RoverTest extends Specification {
         def commandFactory = Mock(CommandFactory)
         commandFactory.charToCommand(_) >> {
             char c ->
-                throw new UnknownCommandException();
+                throw new UnknownCommandException()
         }
 
         and:
@@ -160,6 +164,139 @@ class RoverTest extends Specification {
         CardinalDirection.EAST  | CardinalDirection.SOUTH
         CardinalDirection.SOUTH | CardinalDirection.WEST
         CardinalDirection.WEST  | CardinalDirection.NORTH
+    }
+
+    def "When a sequence of commands encounters an obstacle then the rover moves up to the last possible point, aborts the sequence and reports the obstacle"() {
+        given:
+        def planet = new Planet(10, 10)
+        planet.addObstacle(new Point(0, 2))
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.receiveCommands("ffff")
+
+        then:
+        def e = thrown(CannotExecuteCommandException)
+        def cause = e.getCause()
+        cause instanceof ObstacleEncounteredException
+        cause.message == "Encountered an obstacle in position 0,2"
+        rover.position == new Point(0, 1)
+    }
+
+    def "When checking for obstacle backward and there is an obstacle then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> true
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleBackward()
+
+        then:
+        thrown(ObstacleEncounteredException)
+    }
+
+    def "When checking for obstacle forward and there is an obstacle then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> true
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleForward()
+
+        then:
+        thrown(ObstacleEncounteredException)
+    }
+
+    def "When checking for obstacle backward and there is no obstacle then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> false
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleBackward()
+
+        then:
+        notThrown(ObstacleEncounteredException)
+    }
+
+    def "When checking for obstacle forward and there is no obstacle then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> false
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleForward()
+
+        then:
+        notThrown(ObstacleEncounteredException)
+    }
+
+    def "When checking for obstacle forward and there is no obstacle then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> false
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleForward()
+
+        then:
+        notThrown(ObstacleEncounteredException)
+    }
+
+    def "When checking for obstacle forward and the position forward is invalid then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> { throw new InvalidPositionOnPlanetException(Mock(Point)) }
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleForward()
+
+        then:
+        def e = thrown(CannotCheckForObstacleException)
+        def cause = e.getCause()
+        cause instanceof InvalidPositionOnPlanetException
+    }
+
+    def "When checking for obstacle backward and the position backward is invalid then an exception must be thrown"() {
+        given:
+        def planet = Mock(Planet)
+        def obstaclePosition = Mock(Point)
+        planet.nextPositionInDirection(_, _) >> obstaclePosition
+        planet.hasObstacleInPosition(obstaclePosition) >> { throw new InvalidPositionOnPlanetException(Mock(Point)) }
+
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+
+        when:
+        rover.checkForObstacleBackward()
+
+        then:
+        def e = thrown(CannotCheckForObstacleException)
+        def cause = e.getCause()
+        cause instanceof InvalidPositionOnPlanetException
     }
 
     def createRover(position = new Point(0, 0), facedDirection = CardinalDirection.NORTH, commandFactory = new CommandFactory(), planet = new Planet(10, 10)) {

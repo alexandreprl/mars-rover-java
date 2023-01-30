@@ -2,6 +2,7 @@ package com.stonal.rover.planet
 
 import com.stonal.rover.CardinalDirection
 import com.stonal.rover.planet.exception.InvalidPlanetSizeException
+import com.stonal.rover.planet.exception.InvalidPositionOnPlanetException
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -59,5 +60,87 @@ class PlanetTest extends Specification {
         new Point(9, 9)  | CardinalDirection.SOUTH | new Point(9, 8)
         new Point(9, 9)  | CardinalDirection.WEST  | new Point(8, 9)
         new Point(9, 9)  | CardinalDirection.EAST  | new Point(0, 9)
+    }
+
+    def "When trying to add an obstacle to a valid position then no exception should be thrown"() {
+        given:
+        def planet = new Planet(10, 10)
+
+        when:
+        planet.addObstacle(new Point(x, y))
+
+        then:
+        noExceptionThrown()
+
+        where:
+        x | y
+        0 | 0
+        9 | 9
+    }
+
+    def "When trying to add an obstacle to an invalid position then an exception must be thrown"() {
+        given:
+        def planet = new Planet(10, 10)
+
+        when:
+        planet.addObstacle(new Point(x, y))
+
+        then:
+        thrown(InvalidPositionOnPlanetException)
+
+        where:
+        x  | y
+        -1 | 0
+        0  | -1
+        10 | 0
+        0  | 10
+    }
+
+    def "When checking for obstacle on a valid position then no exception should be thrown"() {
+        given:
+        def planet = new Planet(10, 10)
+
+        when:
+        planet.hasObstacleInPosition(new Point(x, y))
+
+        then:
+        noExceptionThrown()
+
+        where:
+        x | y
+        0 | 0
+        9 | 9
+    }
+
+    def "When checking for obstacle on an invalid position then an exception must be thrown"() {
+        given:
+        def planet = new Planet(10, 10)
+
+        when:
+        planet.hasObstacleInPosition(new Point(x, y))
+
+        then:
+        thrown(InvalidPositionOnPlanetException)
+
+        where:
+        x  | y
+        -1 | 0
+        0  | -1
+        10 | 0
+        0  | 10
+    }
+
+    def "Given an obstacle is on #obstaclePosition.x,#obstaclePosition.y then hasObstacleInPosition for #verificationPosition.x,#verificationPosition.y is #expected"() {
+        given:
+        def planet = new Planet(10, 10)
+        planet.addObstacle(obstaclePosition)
+
+        expect:
+        planet.hasObstacleInPosition(verificationPosition) == expected
+
+        where:
+        obstaclePosition | verificationPosition | expected
+        new Point(0, 0)  | new Point(0, 0)      | true
+        new Point(0, 0)  | new Point(1, 1)      | false
     }
 }

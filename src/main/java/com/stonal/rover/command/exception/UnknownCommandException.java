@@ -1,4 +1,4 @@
 package com.stonal.rover.command.exception;
 
-public class UnknownCommandException extends Throwable {
+public class UnknownCommandException extends Exception {
 }
