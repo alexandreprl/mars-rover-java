@@ -4,6 +4,7 @@ import com.stonal.rover.command.Command
 import com.stonal.rover.command.CommandFactory
 import com.stonal.rover.command.exception.UnknownCommandException
 import com.stonal.rover.exception.FailedToInitializeRoverException
+import com.stonal.rover.planet.Planet
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -13,7 +14,7 @@ import java.awt.*
 class RoverTest extends Specification {
     def "A Rover can be initialized with a starting point and the direction it is facing"() {
         when:
-        def rover = new Rover(new Point(x, y), facedDirection, new CommandFactory())
+        def rover = createRover(new Point(x, y), facedDirection, new CommandFactory())
 
         then:
         rover.position.x == x
@@ -32,7 +33,7 @@ class RoverTest extends Specification {
 
     def "When a rover is initialized with invalid values then an exception is thrown"() {
         when:
-        new Rover(point, facedDirection, commandFactory)
+        createRover(point, facedDirection, commandFactory)
 
         then:
         def e = thrown(FailedToInitializeRoverException)
@@ -59,7 +60,7 @@ class RoverTest extends Specification {
         }
 
         and:
-        def rover = new Rover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
 
         when:
         rover.receiveCommands("ab")
@@ -78,7 +79,7 @@ class RoverTest extends Specification {
         }
 
         and:
-        def rover = new Rover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
 
         when:
         rover.receiveCommands("ab")
@@ -89,7 +90,7 @@ class RoverTest extends Specification {
 
     def "moveForward"() {
         given:
-        def rover = new Rover(new Point(0, 0), facedDirection, new CommandFactory())
+        def rover = createRover(new Point(0, 0), initialFacedDirection)
 
         when:
         rover.moveForward()
@@ -99,16 +100,16 @@ class RoverTest extends Specification {
         rover.position.y == expectedY
 
         where:
-        expectedX | expectedY | facedDirection
+        expectedX | expectedY | initialFacedDirection
         0         | 1         | CardinalDirection.NORTH
-        0         | -1        | CardinalDirection.SOUTH
+        0         | 9         | CardinalDirection.SOUTH
         1         | 0         | CardinalDirection.EAST
-        -1        | 0         | CardinalDirection.WEST
+        9         | 0         | CardinalDirection.WEST
     }
 
     def "moveBackward"() {
         given:
-        def rover = new Rover(new Point(0, 0), facedDirection, new CommandFactory())
+        def rover = createRover(new Point(0, 0), initialFacedDirection)
 
         when:
         rover.moveBackward()
@@ -118,16 +119,16 @@ class RoverTest extends Specification {
         rover.position.y == expectedY
 
         where:
-        expectedX | expectedY | facedDirection
+        expectedX | expectedY | initialFacedDirection
         0         | 1         | CardinalDirection.SOUTH
-        0         | -1        | CardinalDirection.NORTH
+        0         | 9         | CardinalDirection.NORTH
         1         | 0         | CardinalDirection.WEST
-        -1        | 0         | CardinalDirection.EAST
+        9         | 0         | CardinalDirection.EAST
     }
 
     def "rotateLeft"() {
         given:
-        def rover = new Rover(new Point(0, 0), initialFacedDirection, new CommandFactory())
+        def rover = createRover(new Point(0, 0), initialFacedDirection)
 
         when:
         rover.rotateLeft()
@@ -145,7 +146,7 @@ class RoverTest extends Specification {
 
     def "rotateRight"() {
         given:
-        def rover = new Rover(new Point(0, 0), initialFacedDirection, new CommandFactory())
+        def rover = createRover(new Point(0, 0), initialFacedDirection)
 
         when:
         rover.rotateRight()
@@ -159,5 +160,9 @@ class RoverTest extends Specification {
         CardinalDirection.EAST  | CardinalDirection.SOUTH
         CardinalDirection.SOUTH | CardinalDirection.WEST
         CardinalDirection.WEST  | CardinalDirection.NORTH
+    }
+
+    def createRover(position = new Point(0, 0), facedDirection = CardinalDirection.NORTH, commandFactory = new CommandFactory(), planet = new Planet(10, 10)) {
+        return new Rover(position, facedDirection, commandFactory, planet)
     }
 }
