@@ -69,6 +69,7 @@ public class Rover {
     public void checkForObstacleBackward() throws ObstacleEncounteredException, CannotCheckForObstacleException {
         checkForObstacleInDirection(facedDirection.opposite());
     }
+
     private void checkForObstacleInDirection(CardinalDirection direction) throws ObstacleEncounteredException, CannotCheckForObstacleException {
         Point nextPosition = planet.nextPositionInDirection(position, direction);
         try {
