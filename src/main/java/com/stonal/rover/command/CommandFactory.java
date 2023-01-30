@@ -7,6 +7,8 @@ public class CommandFactory {
         return switch (character) {
             case 'f' -> new MoveForwardCommand();
             case 'b' -> new MoveBackwardCommand();
+            case 'l' -> new RotateLeftCommand();
+            case 'r' -> new RotateRightCommand();
             default -> throw new UnknownCommandException();
         };
     }

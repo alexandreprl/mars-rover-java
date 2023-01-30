@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class Rover {
     private final Point position;
-    private final CardinalDirection facedDirection;
+    private CardinalDirection facedDirection;
     private final CommandFactory commandFactory;
 
     public Rover(Point initialStartingPoint, CardinalDirection initialFacedDirection, CommandFactory commandFactory) throws FailedToInitializeRoverException {
@@ -45,5 +45,23 @@ public class Rover {
             case EAST -> position.x--;
             case WEST -> position.x++;
         }
+    }
+
+    public void rotateLeft() {
+        facedDirection = switch (facedDirection) {
+            case NORTH -> CardinalDirection.WEST;
+            case WEST -> CardinalDirection.SOUTH;
+            case SOUTH -> CardinalDirection.EAST;
+            case EAST -> CardinalDirection.NORTH;
+        };
+    }
+
+    public void rotateRight() {
+        facedDirection = switch (facedDirection) {
+            case NORTH -> CardinalDirection.EAST;
+            case EAST -> CardinalDirection.SOUTH;
+            case SOUTH -> CardinalDirection.WEST;
+            case WEST -> CardinalDirection.NORTH;
+        };
     }
 }
