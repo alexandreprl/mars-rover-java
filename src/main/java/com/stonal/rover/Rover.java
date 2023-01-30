@@ -3,16 +3,17 @@ package com.stonal.rover;
 import com.stonal.rover.command.CommandFactory;
 import com.stonal.rover.command.exception.UnknownCommandException;
 import com.stonal.rover.exception.FailedToInitializeRoverException;
+import com.stonal.rover.planet.Planet;
 
 import java.awt.*;
 
 public class Rover {
-    private final Point position;
+    private Point position;
     private CardinalDirection facedDirection;
     private final CommandFactory commandFactory;
+    private final Planet planet;
 
-    public Rover(Point initialStartingPoint, CardinalDirection initialFacedDirection, CommandFactory commandFactory) throws FailedToInitializeRoverException {
-        this.commandFactory = commandFactory;
+    public Rover(Point initialStartingPoint, CardinalDirection initialFacedDirection, CommandFactory commandFactory, Planet planet) throws FailedToInitializeRoverException {
         if (initialStartingPoint == null)
             throw new FailedToInitializeRoverException("The initial position provided cannot be null");
         if (initialFacedDirection == null)
@@ -21,6 +22,8 @@ public class Rover {
             throw new FailedToInitializeRoverException("The command factory provided cannot be null");
         this.position = initialStartingPoint;
         this.facedDirection = initialFacedDirection;
+        this.commandFactory = commandFactory;
+        this.planet = planet;
     }
 
     public void receiveCommands(String commands) throws UnknownCommandException {
@@ -30,21 +33,11 @@ public class Rover {
     }
 
     public void moveForward() {
-        switch (facedDirection) {
-            case NORTH -> position.y++;
-            case SOUTH -> position.y--;
-            case EAST -> position.x++;
-            case WEST -> position.x--;
-        }
+        position = planet.nextPositionInDirection(position, facedDirection);
     }
 
     public void moveBackward() {
-        switch (facedDirection) {
-            case NORTH -> position.y--;
-            case SOUTH -> position.y++;
-            case EAST -> position.x--;
-            case WEST -> position.x++;
-        }
+        position = planet.nextPositionInDirection(position, facedDirection.opposite());
     }
 
     public void rotateLeft() {
