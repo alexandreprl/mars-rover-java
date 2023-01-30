@@ -124,4 +124,40 @@ class RoverTest extends Specification {
         1         | 0         | CardinalDirection.WEST
         -1        | 0         | CardinalDirection.EAST
     }
+
+    def "rotateLeft"() {
+        given:
+        def rover = new Rover(new Point(0, 0), initialFacedDirection, new CommandFactory())
+
+        when:
+        rover.rotateLeft()
+
+        then:
+        rover.facedDirection == expectedFacedDirection
+
+        where:
+        initialFacedDirection   | expectedFacedDirection
+        CardinalDirection.NORTH | CardinalDirection.WEST
+        CardinalDirection.WEST  | CardinalDirection.SOUTH
+        CardinalDirection.SOUTH | CardinalDirection.EAST
+        CardinalDirection.EAST  | CardinalDirection.NORTH
+    }
+
+    def "rotateRight"() {
+        given:
+        def rover = new Rover(new Point(0, 0), initialFacedDirection, new CommandFactory())
+
+        when:
+        rover.rotateRight()
+
+        then:
+        rover.facedDirection == expectedFacedDirection
+
+        where:
+        initialFacedDirection   | expectedFacedDirection
+        CardinalDirection.NORTH | CardinalDirection.EAST
+        CardinalDirection.EAST  | CardinalDirection.SOUTH
+        CardinalDirection.SOUTH | CardinalDirection.WEST
+        CardinalDirection.WEST  | CardinalDirection.NORTH
+    }
 }

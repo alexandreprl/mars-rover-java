@@ -17,6 +17,8 @@ class CommandFactoryTest extends Specification {
         character   | expectedCommand
         'f' as char | MoveForwardCommand
         'b' as char | MoveBackwardCommand
+        'l' as char | RotateLeftCommand
+        'r' as char | RotateRightCommand
     }
 
     def "When an invalid character is sent to charToCommand then it should throw an exception"() {
