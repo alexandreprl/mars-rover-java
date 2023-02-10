@@ -45,21 +45,11 @@ public class Rover {
     }
 
     public void rotateLeft() {
-        facedDirection = switch (facedDirection) {
-            case NORTH -> CardinalDirection.WEST;
-            case WEST -> CardinalDirection.SOUTH;
-            case SOUTH -> CardinalDirection.EAST;
-            case EAST -> CardinalDirection.NORTH;
-        };
+        facedDirection = facedDirection.left();
     }
 
     public void rotateRight() {
-        facedDirection = switch (facedDirection) {
-            case NORTH -> CardinalDirection.EAST;
-            case EAST -> CardinalDirection.SOUTH;
-            case SOUTH -> CardinalDirection.WEST;
-            case WEST -> CardinalDirection.NORTH;
-        };
+        facedDirection = facedDirection.right();
     }
 
     public void checkForObstacleForward() throws ObstacleEncounteredException, CannotCheckForObstacleException {
