@@ -2,8 +2,8 @@ package com.stonal.rover
 
 import com.stonal.rover.command.Command
 import com.stonal.rover.command.CommandFactory
+import com.stonal.rover.command.MoveForwardCommand
 import com.stonal.rover.command.exception.CannotExecuteCommandException
-import com.stonal.rover.command.exception.UnknownCommandException
 import com.stonal.rover.exception.CannotCheckForObstacleException
 import com.stonal.rover.exception.FailedToInitializeRoverException
 import com.stonal.rover.exception.ObstacleEncounteredException
@@ -18,7 +18,7 @@ import java.awt.*
 class RoverTest extends Specification {
     def "A Rover can be initialized with a starting point and the direction it is facing"() {
         when:
-        def rover = createRover(new Point(x, y), facedDirection, new CommandFactory())
+        def rover = createRover(new Point(x, y), facedDirection)
 
         then:
         rover.position.x == x
@@ -37,7 +37,7 @@ class RoverTest extends Specification {
 
     def "When a rover is initialized with invalid values then an exception is thrown"() {
         when:
-        createRover(point, facedDirection, commandFactory)
+        createRover(point, facedDirection)
 
         then:
         def e = thrown(FailedToInitializeRoverException)
@@ -47,49 +47,6 @@ class RoverTest extends Specification {
         point       | facedDirection          | commandFactory       | exceptionMessage
         null        | CardinalDirection.NORTH | new CommandFactory() | "The initial position provided cannot be null"
         new Point() | null                    | new CommandFactory() | "The faced direction provided cannot be null"
-        new Point() | CardinalDirection.NORTH | null                 | "The command factory provided cannot be null"
-    }
-
-    def "When an array of commands is received then the commands are executed"() {
-        given:
-        def commandA = Mock(Command)
-        def commandB = Mock(Command)
-        def commandFactory = Mock(CommandFactory)
-        commandFactory.charToCommand(_) >> {
-            char c ->
-                switch (c) {
-                    case 'a': return commandA
-                    case 'b': return commandB
-                }
-        }
-
-        and:
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
-
-        when:
-        rover.receiveCommands("ab")
-
-        then:
-        1 * commandA.execute(rover)
-        1 * commandB.execute(rover)
-    }
-
-    def "When an unknown command is received then an exception is thrown"() {
-        given:
-        def commandFactory = Mock(CommandFactory)
-        commandFactory.charToCommand(_) >> {
-            char c ->
-                throw new UnknownCommandException()
-        }
-
-        and:
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, commandFactory)
-
-        when:
-        rover.receiveCommands("ab")
-
-        then:
-        thrown(UnknownCommandException)
     }
 
     def "moveForward"() {
@@ -166,23 +123,6 @@ class RoverTest extends Specification {
         CardinalDirection.WEST  | CardinalDirection.NORTH
     }
 
-    def "When a sequence of commands encounters an obstacle then the rover moves up to the last possible point, aborts the sequence and reports the obstacle"() {
-        given:
-        def planet = new Planet(10, 10)
-        planet.addObstacle(new Point(0, 2))
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
-
-        when:
-        rover.receiveCommands("ffff")
-
-        then:
-        def e = thrown(CannotExecuteCommandException)
-        def cause = e.getCause()
-        cause instanceof ObstacleEncounteredException
-        cause.message == "Encountered an obstacle in position 0,2"
-        rover.position == new Point(0, 1)
-    }
-
     def "When checking for obstacle backward and there is an obstacle then an exception must be thrown"() {
         given:
         def planet = Mock(Planet)
@@ -190,7 +130,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> true
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleBackward()
@@ -206,7 +146,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> true
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleForward()
@@ -222,7 +162,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> false
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleBackward()
@@ -238,7 +178,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> false
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleForward()
@@ -254,7 +194,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> false
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleForward()
@@ -270,7 +210,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> { throw new InvalidPositionOnPlanetException(Mock(Point)) }
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleForward()
@@ -288,7 +228,7 @@ class RoverTest extends Specification {
         planet.nextPositionInDirection(_, _) >> obstaclePosition
         planet.hasObstacleInPosition(obstaclePosition) >> { throw new InvalidPositionOnPlanetException(Mock(Point)) }
 
-        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, new CommandFactory(), planet)
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
 
         when:
         rover.checkForObstacleBackward()
@@ -299,7 +239,42 @@ class RoverTest extends Specification {
         cause instanceof InvalidPositionOnPlanetException
     }
 
-    def createRover(position = new Point(0, 0), facedDirection = CardinalDirection.NORTH, commandFactory = new CommandFactory(), planet = new Planet(10, 10)) {
-        return new Rover(position, facedDirection, commandFactory, planet)
+    def "execute"() {
+        given:
+        def rover = createRover()
+
+        and:
+        def command = Mock(Command)
+
+        when:
+        rover.execute(command)
+
+        then:
+        1 * command.execute(rover)
+    }
+    def "When a sequence of commands encounters an obstacle then the rover moves up to the last possible point, aborts the sequence and reports the obstacle"() {
+        given:
+        def planet = new Planet(10, 10)
+        planet.addObstacle(new Point(0, 2))
+        def rover = createRover(new Point(0, 0), CardinalDirection.NORTH, planet)
+
+        when:
+        rover.execute(new MoveForwardCommand())
+        rover.execute(new MoveForwardCommand())
+        rover.execute(new MoveForwardCommand())
+        rover.execute(new MoveForwardCommand())
+
+        then:
+        def e = thrown(CannotExecuteCommandException)
+        def cause = e.getCause()
+        cause instanceof ObstacleEncounteredException
+        cause.message == "Encountered an obstacle in position 0,2"
+        rover.position == new Point(0, 1)
+    }
+
+
+
+    def createRover(position = new Point(0, 0), facedDirection = CardinalDirection.NORTH, planet = new Planet(10, 10)) {
+        return new Rover(position, facedDirection, planet)
     }
 }
